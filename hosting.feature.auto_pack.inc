@@ -10,7 +10,8 @@ function hosting_auto_pack_hosting_feature(){
       'description' => t('Creates an automatic pack server for application/apache servers that match a regex.'),
       'status' => HOSTING_FEATURE_DISABLED,
       'module' => 'hosting_auto_pack',
-      'group' => 'optional'
+      'group' => 'optional',
+      'enable' => 'hosting_auto_pack_create_pack'
     )
   );
 }
