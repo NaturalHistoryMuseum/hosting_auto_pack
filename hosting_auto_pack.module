@@ -1,0 +1,82 @@
+<?php
+
+/**
+ * Implements hook_node_insert()
+ */
+function hosting_auto_pack_node_insert($node){
+  if($node->type == 'server' && (strpos($node->title, variable_get('hosting_auto_pack_slave_name_starts', 'sp-app')) === 0 || strpos($node->title, variable_get('hosting_auto_pack_master_name_starts', 'sp-control')) === 0)){
+    hosting_auto_pack_create_pack();
+  }
+}
+
+/**
+ * Implements hook_node_delete()
+ */
+function hosting_auto_pack_node_delete($node){
+  hosting_auto_pack_node_insert($node);
+}
+
+/**
+ * Note, we do not do anything when a server node is updated, as Aegir already
+ * handles this for us (it may well handle delete too).
+ */
+/**
+ * Create or update the pack server
+ */
+function hosting_auto_pack_create_pack(){
+  $pack_name = variable_get('hosting_auto_pack_pack_name', 'automatic-pack');
+  $slave_like = variable_get('hosting_auto_pack_slave_name_starts', 'sp-app');
+  $master_like = variable_get('hosting_auto_pack_master_name_starts', 'sp-control');
+  // Only go any further if we have a master and slave server.
+  $slave_nids = db_select('node', 'n')->condition('title', $slave_like . '%', 'LIKE')->condition('type', 'server')->condition('status', 1)->fields('n', array(
+    'nid'
+  ))->execute()->fetchCol();
+  if(count($slave_nids)){
+    $master_nids = db_select('node', 'n')->condition('title', $master_like . '%', 'LIKE')->condition('type', 'server')->condition('status', 1)->fields('n', array(
+      'nid'
+    ))->execute()->fetchCol();
+    if(count($master_nids)){
+      $slave_nids = drupal_map_assoc($slave_nids);
+      $master_nids = drupal_map_assoc($master_nids);
+      // Try and load an existing node and we simply edit that.
+      $nid = db_select('node', 'n')->condition('title', $pack_name)->condition('type', 'server')->condition('uid', 1)->condition('status', 1)->fields('n', array(
+        'nid'
+      ))->execute()->fetchField();
+      if($nid){
+        // The node exists, so we update it.
+        $node = node_load($nid);
+        $node->services['http']->slave_servers = $slave_nids;
+        $node->services['http']->master_servers = $master_nids;
+        node_save($node);
+      }else{
+        // The node does not exist - we need to create it.
+        $account = user_load(1);
+        $form_state = array(
+          'values' => array(
+            'uid' => 1,
+            'name' => $account->name,
+            'created' => time(),
+            'type' => 'server',
+            'title' => $pack_name,
+            'services' => array(
+              'http' => array(
+                'type' => 'pack',
+                'pack' => array(
+                  'master_servers' => $master_nids,
+                  'slave_servers' => $slave_nids
+                )
+              )
+            ),
+            'submit' => 'Save',
+            'op' => 'Save'
+          )
+        );
+        $node = new stdClass();
+        $node->nid = NULL;
+        $node->type = 'server';
+        node_object_prepare($node);
+        drupal_form_submit('server_node_form', $form_state, $node);
+      }
+    }
+  }
+}

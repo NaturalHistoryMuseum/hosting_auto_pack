@@ -1,0 +1,6 @@
+name = Automatic pack server creation
+description = Automatically add application/apache servers to a single pack server based on a regex of their domain name.
+package = Hosting
+dependencies[] = hosting_web_pack
+dependencies[] = hosting
+core = 7.x
