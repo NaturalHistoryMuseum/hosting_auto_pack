@@ -75,7 +75,37 @@ function hosting_auto_pack_create_pack(){
         $node->nid = NULL;
         $node->type = 'server';
         node_object_prepare($node);
+
+        # Load node form: https://stackoverflow.com/a/4770487
+        module_load_include('inc', 'node', 'node.pages');
+
         drupal_form_submit('server_node_form', $form_state, $node);
+
+        $form_id = 'server_node_form';
+
+        if (!isset($form_state['build_info']['args'])) {
+          $form_state['build_info']['args'] = [$node];
+        }
+
+        // Merge in default values.
+        $form_state += form_state_defaults();
+
+        // Populate $form_state['input'] with the submitted values before retrieving
+        // the form, to be consistent with what drupal_build_form() does for
+        // non-programmatic submissions (form builder functions may expect it to be
+        // there).
+        $form_state['input'] = $form_state['values'];
+        $form_state['programmed'] = TRUE;
+        $form = drupal_retrieve_form($form_id, $form_state);
+
+        // Programmed forms are always submitted.
+        $form_state['submitted'] = TRUE;
+
+        // Reset form validation.
+        $form_state['must_validate'] = FALSE;
+        form_clear_error();
+        drupal_prepare_form($form_id, $form, $form_state);
+        drupal_process_form($form_id, $form, $form_state);
       }
     }
   }
