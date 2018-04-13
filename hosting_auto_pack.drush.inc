@@ -1,6 +1,5 @@
 <?php
-/
-**
+/**
  * Implements hook_drush_command().
  */
 function hosting_auto_pack_drush_command() {
@@ -21,10 +20,8 @@ function hosting_auto_pack_drush_command() {
 
 /**
  * Drush command logic.
- * drush_[COMMAND_NAME]().
  */
 function drush_hosting_auto_pack($create) {
-  // $opt1 = drush_get_option('opt1', 'N/A');
-  // $tokens = array('@arg1' => $arg1, '@opt1' => $opt1);
-  drush_print(dt('My custom command. Argument'));
+  hosting_auto_pack_create_pack();
+  drush_print(dt('Hosting auto pack created'));
 }
