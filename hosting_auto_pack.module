@@ -1,5 +1,9 @@
 <?php
 
+
+module_load_include('inc', 'node', 'node.pages');
+
+
 /**
  * Implements hook_node_insert()
  */
@@ -76,7 +80,11 @@ function hosting_auto_pack_create_pack(){
         $node->type = 'server';
         node_object_prepare($node);
         drupal_form_submit('server_node_form', $form_state, $node);
+        if(!form_get_errors()){
+          return true;
+        }
       }
     }
   }
+  return false;
 }
