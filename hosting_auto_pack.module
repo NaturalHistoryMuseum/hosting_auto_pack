@@ -35,7 +35,6 @@ function hosting_auto_pack_get_servers_matching_name($like){
   );
   $query->condition('n.type', 'server');
   $query->condition('n.status', 1);
-  $query->condition('hs.verified', 0, '<>');
   $query->fields('n', array(
     'nid'
   ));
